@@ -45,6 +45,11 @@ public class WordAssociateTool {
      */
     private List<String> thesaurus;
 
+    /**
+     * 设置词库
+     *
+     * @param thesaurus 词库
+     */
     public void setThesaurus(List<String> thesaurus) {
         this.thesaurus = thesaurus;
     }
@@ -54,6 +59,11 @@ public class WordAssociateTool {
      */
     private Comparator<String> comparator;
 
+    /**
+     * 设置排序器
+     *
+     * @param comparator 排序器
+     */
     public void setComparator(Comparator<String> comparator) {
         this.comparator = comparator;
     }

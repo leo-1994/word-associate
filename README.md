@@ -8,9 +8,43 @@
 
 支持自定义词典以及排序规则
 
-##### 原理
+##### 使用方法
 
-词语匹配基于trie字典树实现
+```
+/**
+ * 根据关键词做联想
+ *
+ * @param keyword 关键词
+ * @param size    需要的数量
+ * @return 联想结果集
+ */
+List<String> associate(String keyword, int size);
 
-拼音工具使用[jPinyin]: https://github.com/shenkevin/jpinyin
+ /**
+ * 设置词库
+ *
+ * @param thesaurus 词库
+ */
+ void setThesaurus(List<String> thesaurus);
+ 
+ /**
+ * 设置排序器
+ *
+ * @param comparator 排序器
+ */
+void setComparator(Comparator<String> comparator);
 
+/**
+* 重新构建索引
+*/
+void rebuildIndex();
+```
+
+###### demo
+
+```
+List<String> thesaurus = Arrays.asList("和田玉", "核桃");
+WordAssociateTool wordAssociateTool = new WordAssociateTool(thesaurus, null);
+List<String> result = wordAssociateTool.associate("h", 10);
+result.forEach(System.out::println);
+```
