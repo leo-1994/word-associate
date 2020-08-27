@@ -48,3 +48,10 @@ WordAssociateTool wordAssociateTool = new WordAssociateTool(thesaurus, null);
 List<String> result = wordAssociateTool.associate("h", 10);
 result.forEach(System.out::println);
 ```
+
+###### 自定义拼音词典
+在resources目录下添加user_dic.dict文件
+
+每行一个词，格式: 朩=pin
+
+也可以通过 PinYinUtils.addPinyinDic("朩","pin") 的方式动态添加

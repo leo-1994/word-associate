@@ -6,6 +6,8 @@ import com.github.stuxuhai.jpinyin.PinyinHelper;
 import com.leo.word.trie.TrieTree;
 import com.leo.word.util.CollectionUtils;
 import com.leo.word.util.ListUtils;
+import com.leo.word.util.PinYinUtils;
+import com.leo.word.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,25 +93,29 @@ public class WordAssociateTool {
         qpMap = new HashMap<>();
         qpList = new ArrayList<>();
         szmMap = new HashMap<>();
-        try {
-            for (String word : thesaurus) {
-                // 构建Trie
-                trieTree.insert(word);
-                // 构建全拼索引
-                String qp;
-                qp = PinyinHelper.convertToPinyinString(word, "", PinyinFormat.WITHOUT_TONE);
-                qpMap.computeIfAbsent(qp, k -> new HashSet<>()).add(word);
-                // 构建首字母索引
-                String szm = PinyinHelper.getShortPinyin(word);
-                szmMap.computeIfAbsent(szm, k -> new HashSet<>()).add(word);
+
+        for (String word : thesaurus) {
+            // 构建Trie
+            trieTree.insert(word);
+            // 构建全拼索引
+            String qp;
+            qp = PinYinUtils.convertToPinyinString(word);
+            if (StringUtils.isBlank(qp)) {
+                continue;
             }
-            // 构建全拼列表，根据长度正序排序
-            qpList.addAll(qpMap.keySet());
-            qpList.sort(Comparator.comparingInt(String::length));
-            log.info("build word index end,cost:{},words:{}", System.currentTimeMillis() - start, thesaurus.size());
-        } catch (PinyinException e) {
-            log.error("build index PinyinException:", e);
+            qpMap.computeIfAbsent(qp, k -> new HashSet<>()).add(word);
+            // 构建首字母索引
+            String szm = PinYinUtils.getShortPinyin(word);
+            if (StringUtils.isBlank(szm)) {
+                continue;
+            }
+            szmMap.computeIfAbsent(szm, k -> new HashSet<>()).add(word);
         }
+        // 构建全拼列表，根据长度正序排序
+        qpList.addAll(qpMap.keySet());
+        qpList.sort(Comparator.comparingInt(String::length));
+        log.info("build word index end,cost:{},words:{}", System.currentTimeMillis() - start, thesaurus.size());
+
     }
 
 
@@ -142,49 +148,51 @@ public class WordAssociateTool {
         // 根据关键词前缀找关联
         HashSet<String> wordsForPrefix = trieTree.getWordsForPrefix(keyword);
         wordsForPrefix.remove(keyword);
-        if (wordsForPrefix.size() < 10) {
-            try {
-                // 转换成拼音
-                keyword = PinyinHelper.convertToPinyinString(keyword, "", PinyinFormat.WITHOUT_TONE);
-            } catch (PinyinException e) {
-                log.error("转化拼音异常,keyword:{},e:", keyword, e);
-            }
+        if (wordsForPrefix.size() >= size) {
+            return new ArrayList<>(wordsForPrefix);
         }
-        if (wordsForPrefix.size() < size) {
-            // 如果关联结果为空，根据全拼找关联
-            Set<String> qpResult = qpMap.get(keyword.toLowerCase());
-            if (CollectionUtils.isEmpty(qpResult)) {
-                qpResult = new HashSet<>();
-                // 先从左向右关联
+
+        // 转换成拼音
+        String py = PinYinUtils.convertToPinyinString(keyword);
+        if (StringUtils.isBlank(py)) {
+            return new ArrayList<>(wordsForPrefix);
+        }
+
+
+        // 如果关联结果为空，根据全拼找关联
+        Set<String> qpResult = qpMap.get(py);
+        if (CollectionUtils.isEmpty(qpResult)) {
+            qpResult = new HashSet<>();
+            // 先从左向右关联
+            for (String qp : qpList) {
+                if (qp.startsWith(py)) {
+                    qpResult.addAll(qpMap.get(qp));
+                    if (qpResult.size() >= size) {
+                        break;
+                    }
+                }
+            }
+            // 再全关联
+            if (qpResult.size() < size) {
                 for (String qp : qpList) {
-                    if (qp.startsWith(keyword)) {
+                    if (qp.contains(py)) {
                         qpResult.addAll(qpMap.get(qp));
-                        if (qpResult.size() >= 10) {
+                        if (qpResult.size() >= size) {
                             break;
                         }
                     }
                 }
-                // 再全关联
-                if (qpResult.size() < size) {
-                    for (String qp : qpList) {
-                        if (qp.contains(keyword)) {
-                            qpResult.addAll(qpMap.get(qp));
-                            if (qpResult.size() >= 10) {
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            if (CollectionUtils.isNotEmpty(qpResult)) {
-                for (String s : qpResult) {
-                    wordsForPrefix.addAll(trieTree.getWordsForPrefix(s));
-                }
             }
         }
+        if (CollectionUtils.isNotEmpty(qpResult)) {
+            for (String s : qpResult) {
+                wordsForPrefix.addAll(trieTree.getWordsForPrefix(s));
+            }
+        }
+
         if (wordsForPrefix.size() < size) {
-            // 如果关联结果为空，再根据首字母找关联
-            Set<String> szmResult = szmMap.get(keyword.toLowerCase());
+            // 如果关联结果不足，再根据首字母找关联
+            Set<String> szmResult = szmMap.get(py);
             if (CollectionUtils.isNotEmpty(szmResult)) {
                 for (String s : szmResult) {
                     wordsForPrefix.addAll(trieTree.getWordsForPrefix(s));
@@ -193,4 +201,6 @@ public class WordAssociateTool {
         }
         return new ArrayList<>(wordsForPrefix);
     }
+
+
 }
