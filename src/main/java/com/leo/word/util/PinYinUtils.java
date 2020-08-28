@@ -26,14 +26,16 @@ public class PinYinUtils {
 
     static {
         InputStream in = PinYinUtils.class.getClassLoader().getResourceAsStream("user_dic.dict");
-        try {
-            List<String> readLines = IOUtils.readLines(in);
-            for (String line : readLines) {
-                String[] split = line.split(DELIMITER);
-                pinyinDicMap.put(split[0], split[1]);
+        if (in != null) {
+            try {
+                List<String> readLines = IOUtils.readLines(in);
+                for (String line : readLines) {
+                    String[] split = line.split(DELIMITER);
+                    pinyinDicMap.put(split[0], split[1]);
+                }
+            } catch (IOException e) {
+                log.error("加载用户词典失败,error:", e);
             }
-        } catch (IOException e) {
-            log.error("加载用户词典失败,error:", e);
         }
     }
 

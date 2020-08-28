@@ -16,9 +16,9 @@ public class WordAssociateToolTest {
 
     @Test
     public void associate() {
-        List<String> thesaurus = Arrays.asList("和田玉", "核桃", "品");
+        List<String> thesaurus = Arrays.asList("和田玉", "翡翠", "核桃");
         WordAssociateTool wordAssociateTool = new WordAssociateTool(thesaurus, null);
-        List<String> result = wordAssociateTool.associate("朩", 10);
+        List<String> result = wordAssociateTool.associate("h", 10);
         result.forEach(System.out::println);
     }
 }
