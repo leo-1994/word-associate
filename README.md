@@ -9,7 +9,7 @@
 支持自定义词典以及排序规则
 
 ##### 使用方法
-######引入maven依赖
+###### 引入maven依赖
 ```
 <dependency>
     <groupId>com.github.leo-1994</groupId>
@@ -17,6 +17,7 @@
     <version>1.0.0</version>
 </dependency>
 ```
+###### 主要接口
 ```
 /**
  * 根据关键词做联想
