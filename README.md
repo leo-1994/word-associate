@@ -10,12 +10,13 @@
 
 ##### 使用方法
 ######引入maven依赖
+```
 <dependency>
     <groupId>com.github.leo-1994</groupId>
     <artifactId>word-associate</artifactId>
     <version>1.0.0</version>
 </dependency>
-
+```
 ```
 /**
  * 根据关键词做联想
